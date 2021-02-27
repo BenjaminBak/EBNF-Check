@@ -29,7 +29,8 @@ class Nichtterminal:
         status = 0
         raw = []
         terminale = []
-        for i in range(0, len(self.ableitungtxt)):
+        i = -1
+        for i in range(len(self.ableitungtxt)):
             if status == 0 and self.ableitungtxt[i] == ' ':
                 continue
             elif status == 0 and self.ableitungtxt[i] == ',':
@@ -51,9 +52,10 @@ class Nichtterminal:
             elif status == 0 and self.ableitungtxt[i] in ntcharlist:
                 status = 1
                 l = i
-            elif status == 1 and self.ableitungtxt[i] not in ntcharlist:
+                continue
+            elif status == 1 and self.ableitungtxt[i+1] not in ntcharlist:
                 status = 0
-                r = i
+                r = i+1
                 valid = False
                 for nt in nichtterminalarray:
                     if self.ableitungtxt[l:r] == nt.name:
@@ -63,7 +65,6 @@ class Nichtterminal:
                 if not valid:
                     print("Error: Nichtterminal ohne Ableitung wurde gefunden ({})".format(self.ableitungtxt[l:r]))
                     exit(0)
-
             elif status == 0 and self.ableitungtxt[i] == '"':
                 status = 2
                 l = i+1
@@ -369,9 +370,6 @@ class Ebnfpruefer:
                         status = 3
                         p2 = j
                         j = j - 1
-                        if not wordcheck(textareal[i][p1:p2]):
-                            status = 10
-                            error = 14
                         if rangliste[0] == "Inhalt":
                             rangliste.pop(0)
                         else:
