@@ -223,7 +223,7 @@ class Ebnfpruefer:
                             error = 1
                     elif textareal[i][j] == "=":
                         p2 = j
-                        status = 3
+                        status = 20
                         if not wordcheck(textareal[i][p1:p2]):
                             status = 10
                             error = 1
