@@ -75,7 +75,7 @@ class Nichtterminal:
                 if self.ableitungtxt[l:r] not in terminale:
                     terminale.append(self.ableitungtxt[l:r])
 
-        self.absableitung = self.absbuilder(raw)
+        self.absableitung = self.OrGroupFinder(self.absbuilder(raw))
 
         return terminale
 
@@ -134,6 +134,69 @@ class Nichtterminal:
             j += 1
         return absableitung
 
+    def OrGroupFinder(self, raw):
+        ableitung = raw
+        ableitung2 = []
+        e = 0
+        while e < len(ableitung):
+            if isinstance(ableitung[e], Recgroup) or isinstance(ableitung[e], Optgroup):
+                ableitung[e + 1] = self.OrGroupFinder(ableitung[e + 1])
+            elif isinstance(ableitung[e], list):
+                ableitung[e] = self.OrGroupFinder(ableitung[e])
+            e += 1
+        templist = []  # list that holds temporarily the objects of a orgroup
+        last = 0
+        status = 0
+        f = 0
+        while f < len(ableitung):
+            if (isinstance(ableitung[f], Recgroup) or isinstance(ableitung[f], Optgroup)) or isinstance(ableitung[f], Orgroup):
+                if status == 0 and f + 2 == len(ableitung):
+                    ableitung2.append(ableitung[f:f + 1])
+                elif status == 1 and f + 2 == len(ableitung):
+                    templist.append(ableitung[f:f + 1])
+                    ableitung2.append(Optgroup)
+                    ableitung2.append(templist)
+                    templist = []
+                    status = 0
+                elif status == 0 and ableitung[f + 2] != "|":
+                    ableitung2.append(ableitung[f:f+1])
+                elif status == 1 and ableitung[f + 2] != "|":
+                    templist.append(ableitung[f:f+1])
+                    ableitung2.append(Optgroup)
+                    ableitung2.append(templist)
+                    templist = []
+                    status = 0
+                else:
+                    templist.append(ableitung[f:f + 1])
+                    f += 1
+                    status = 1
+            elif ableitung[f] == "|":
+                pass
+            else:
+                if status == 0 and f + 1 == len(ableitung):
+                    ableitung2.append(ableitung[f])
+                elif status == 1 and f + 1 == len(ableitung):
+                    templist.append(ableitung[f])
+                    ableitung2.append(Optgroup)
+                    ableitung2.append(templist)
+                    templist = []
+                    status = 0
+                elif status == 0 and ableitung[f + 1] != "|":
+                    ableitung2.append(ableitung[f])
+                elif status == 1 and ableitung[f + 1] != "|":
+                    templist.append(ableitung[f])
+                    ableitung2.append(Optgroup)
+                    ableitung2.append(templist)
+                    templist = []
+                    status = 0
+                else:
+                    templist.append(ableitung[f])
+                    status = 1
+            if f + 1 != len(ableitung):
+                f += 1
+            else:
+                break
+        return ableitung2
 
 
 class Ebnfpruefer:
