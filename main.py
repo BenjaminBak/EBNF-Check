@@ -2,12 +2,8 @@
 # Test 123
 # Test 456
 ntcharlist = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-                    'k',
-                    'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E',
-                    'F',
-                    'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-                    "-",
-                    "_"]
+        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E',
+    'F','G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', "-", "_"]
 
 
 class Orgroup:
@@ -16,13 +12,16 @@ class Recgroup:
     pass
 class Optgroup:
     pass
-
+class Recurse:
+    def __init__(self, index):
+        self.pointerindex = index
 
 class Nichtterminal:
     def __init__(self, name, ableitung):
         self.name = name
         self.ableitungtxt = ableitung
         self.absableitung = []
+
     def Updatetoabs(self, ableitungstxt, nichtterminalarray):
         l = 0
         r = 0
@@ -76,7 +75,6 @@ class Nichtterminal:
                     terminale.append(self.ableitungtxt[l:r])
 
         self.absableitung = self.OrGroupFinder(self.absbuilder(raw))
-
         return terminale
 
     def absbuilder(self, raw):
@@ -137,37 +135,36 @@ class Nichtterminal:
     def OrGroupFinder(self, raw):
         ableitung = raw
         ableitung2 = []
-        e = 0
-        while e < len(ableitung):
+
+        for e in range(len(ableitung)):
             if isinstance(ableitung[e], Recgroup) or isinstance(ableitung[e], Optgroup):
                 ableitung[e + 1] = self.OrGroupFinder(ableitung[e + 1])
             elif isinstance(ableitung[e], list):
                 ableitung[e] = self.OrGroupFinder(ableitung[e])
-            e += 1
+
         templist = []  # list that holds temporarily the objects of a orgroup
-        last = 0
         status = 0
         f = 0
         while f < len(ableitung):
             if (isinstance(ableitung[f], Recgroup) or isinstance(ableitung[f], Optgroup)) or isinstance(ableitung[f], Orgroup):
                 if status == 0 and f + 2 == len(ableitung):
-                    ableitung2.append(ableitung[f:f + 1])
+                    ableitung2.extend(ableitung[f:f + 1])
                 elif status == 1 and f + 2 == len(ableitung):
-                    templist.append(ableitung[f:f + 1])
+                    templist.extend(ableitung[f:f + 1])
                     ableitung2.append(Optgroup)
-                    ableitung2.append(templist)
+                    ableitung2.extend(templist)
                     templist = []
                     status = 0
                 elif status == 0 and ableitung[f + 2] != "|":
-                    ableitung2.append(ableitung[f:f+1])
+                    ableitung2.extend(ableitung[f:f+1])
                 elif status == 1 and ableitung[f + 2] != "|":
-                    templist.append(ableitung[f:f+1])
+                    templist.extend(ableitung[f:f+1])
                     ableitung2.append(Optgroup)
-                    ableitung2.append(templist)
+                    ableitung2.extend(templist)
                     templist = []
                     status = 0
                 else:
-                    templist.append(ableitung[f:f + 1])
+                    templist.extend(ableitung[f:f + 1])
                     f += 1
                     status = 1
             elif ableitung[f] == "|":
@@ -520,6 +517,13 @@ class Ebnfpruefer:
 
             self.nichtterminalarray.append(Nichtterminal(ntname, Abltext))
 
+    def branchconnect(self, ntlist):
+        tree = []
+
+
+
+        return tree
+
     def __init__(self, grammarfilename="txtfile.txt"):
         print("Überprüfe eingegebene Grammatik auf Fehler...\n")
         if self.texteingabecheck(grammarfilename):
@@ -538,6 +542,10 @@ class Ebnfpruefer:
             for t in terminale:
                 if t not in self.terminalalphabet:
                     self.terminalalphabet.append(t)
+
+        self.tree = self.branchconnect(self.nichtterminalarray)
+
+
 
 
 grammarcheck1 = Ebnfpruefer()
