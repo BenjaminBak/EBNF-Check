@@ -7,14 +7,37 @@ ntcharlist = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", 'a', 'b', 'c', '
 
 
 class Orgroup:
-    pass
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return 'Or/'
+
+
 class Recgroup:
-    pass
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return 'Rec/'
+
+
 class Optgroup:
-    pass
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return 'Opt/'
+
+
 class Recurse:
     def __init__(self, index):
         self.pointerindex = index
+        self.representation = 'r/'+str(self.pointerindex)
+
+    def __repr__(self):
+        return self.representation
+
 
 class Nichtterminal:
     def __init__(self, name, ableitung):
@@ -22,7 +45,10 @@ class Nichtterminal:
         self.ableitungtxt = ableitung
         self.absableitung = []
 
-    def Updatetoabs(self, ableitungstxt, nichtterminalarray):
+    def __repr__(self):
+        return self.name
+
+    def Updatetoabs(self, nichtterminalarray):
         l = 0
         r = 0
         status = 0
@@ -52,7 +78,7 @@ class Nichtterminal:
                 status = 1
                 l = i
                 continue
-            elif status == 1 and self.ableitungtxt[i+1] not in ntcharlist:
+            elif status == 1 and (i == len(self.ableitungtxt) - 1 or self.ableitungtxt[i+1] not in ntcharlist):
                 status = 0
                 r = i+1
                 valid = False
@@ -197,6 +223,40 @@ class Nichtterminal:
 
 
 class Ebnfpruefer:
+    def __init__(self, grammarfilename="txtfile.txt"):
+        print("Überprüfe eingegebene Grammatik auf Fehler...\n")
+        if self.texteingabecheck(grammarfilename):
+            print("Die Überprüfung der Grammatik verlief erfolgreich.")
+        else:
+            print("\nBei der Überprüfung der Grammatik sind Fehler aufgetreten. \nÜberprüfen sie die Grammatik erneut, nachdem sie versucht haben diese zu beheben.")
+            exit(0)
+        self.grammartextarray = self.txtreadwithextra(grammarfilename)
+        self.nichtterminalarray = []
+        self.terminalalphabet = []
+        self.grammatikbuilder(self.grammartextarray)
+
+        for nt in self.nichtterminalarray:
+            terminale = nt.Updatetoabs(self.nichtterminalarray)
+            for t in terminale:
+                if t not in self.terminalalphabet:
+                    self.terminalalphabet.append(t)
+        self.ugly = None
+        self.tree = []
+        self.branchconnect()
+
+        self.word = None
+        while True:
+            print('\nGeben Sie nun das Wort an, dessen Konformität geprüft werden soll.\n')
+            self.word = input('Zu prüfendes Wort:  ')
+            print('\n')
+ 
+
+            print('\nWollen Sie mit der aktuellen Grammatik weitere Wörter prüfen? \n')
+            exit_choice = input('(drücke y/n):  ')
+            if exit_choice != 'y':
+                break
+        exit(0)
+
 
     def txtread(self, grammarfilename):
         txtarray = []  # Textarray
@@ -511,39 +571,53 @@ class Ebnfpruefer:
                 if line[index] == ';':
                     pointerright = index
                     break
-                else:
-                    continue
             Abltext = line[pointerleft:pointerright]
 
             self.nichtterminalarray.append(Nichtterminal(ntname, Abltext))
 
-    def branchconnect(self, ntlist):
-        tree = []
-
-
-
-        return tree
-
-    def __init__(self, grammarfilename="txtfile.txt"):
-        print("Überprüfe eingegebene Grammatik auf Fehler...\n")
-        if self.texteingabecheck(grammarfilename):
-            print("Die Überprüfung der Grammatik verlief erfolgreich.")
+    def uglyoverwrite(self, indexlist, obj, array):
+        if not indexlist:
+            array = obj
         else:
-            print("\nBei der Überprüfung der Grammatik sind Fehler aufgetreten. \nÜberprüfen sie die Grammatik erneut, nachdem sie versucht haben diese zu beheben.")
-            exit(0)
-        self.grammartextarray = self.txtreadwithextra(grammarfilename)
-        self.nichtterminalarray = []
-        self.terminalalphabet = []
-        self.grammatikbuilder(self.grammartextarray)
+            indexstr = ''
+            for i in indexlist:
+                indexstr += '[' + str(i) + ']'
+            exec('array' + indexstr + ' = obj')
 
-        for nt in self.nichtterminalarray:
-            terminale = nt.Updatetoabs(nt.ableitungtxt, self.nichtterminalarray)
-            print(nt.absableitung)
-            for t in terminale:
-                if t not in self.terminalalphabet:
-                    self.terminalalphabet.append(t)
+    def uglypull(self, indexlist, array):
+        if not indexlist:
+            return array
+        indexstr = ''
+        for i in indexlist:
+            indexstr += '[' + str(i) + ']'
+        exec('self.ugly = array' + indexstr)
+        return self.ugly
 
-        self.tree = self.branchconnect(self.nichtterminalarray)
+    def branchconnect(self):
+        self.tree = [self.nichtterminalarray[0]]
+
+        def reboy(section, origin=[], path=[0]):
+            if isinstance(section, list):
+                pass
+            elif isinstance(section, Nichtterminal):
+                personal_origin = origin[:]
+                personal_origin.append(section)
+                self.uglyoverwrite(path, section.absableitung, self.tree)
+                for i in range(len(self.uglypull(path, self.tree))):
+                    personal_path = path[:]
+                    personal_path.append(i)
+                    if self.uglypull(personal_path, self.tree) in origin:
+                        pointer = None
+                        for j in range(len(origin)):
+                            if self.uglypull(personal_path, self.tree) == origin[j]:
+                                pointer = j
+                                break
+                        self.uglyoverwrite(personal_path, Recurse(personal_path[0:j+1]), self.tree)
+                    else:
+                        reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
+
+        reboy(self.tree[0])
+
 
 
 
