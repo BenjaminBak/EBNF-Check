@@ -22,12 +22,7 @@ class Recgroup:
         return 'Rec/'
 
 
-class Optgroup:
-    def __init__(self):
-        pass
 
-    def __repr__(self):
-        return 'Opt/'
 
 
 class Recurse:
@@ -39,8 +34,8 @@ class Recurse:
         return self.representation
 
 class Terminal:
-    def __init__(self, index):
-        self.content
+    def __init__(self, content):
+        self.content = content
 
     def __repr__(self):
         return '#T:'+self.content
@@ -56,7 +51,7 @@ class Nonterminal:
     def __repr__(self):
         return self.name
 
-    def Updatetoabs(self, nichtterminalarray):
+    def parse1(self, nichtterminalarray):
         l = 0
         r = 0
         status = 0
@@ -104,14 +99,14 @@ class Nonterminal:
             elif status == 2 and self.ableitungtxt[i] == '"':
                 status = 0
                 r = i
-                raw.append(self.ableitungtxt[l:r])
+                raw.append(Terminal(self.ableitungtxt[l:r]))
                 if self.ableitungtxt[l:r] not in terminale:
                     terminale.append(self.ableitungtxt[l:r])
 
-        self.absableitung = self.OrGroupFinder(self.absbuilder(raw))
+        self.absableitung = self.OrGroupFinder(self.parse2(raw))
         return terminale
 
-    def absbuilder(self, raw):
+    def parse2(self, raw):
         absableitung = []
         j = 0
         while j < len(raw):
@@ -130,7 +125,7 @@ class Nonterminal:
                     elif raw[k] == ')':
                         depth -= 1
                 raw2 = raw[j+1:end]
-                absableitung.append(self.absbuilder(raw2))
+                absableitung.append(self.parse2(raw2))
                 j = end
             elif raw[j] == "{":
                 depth = 0
@@ -144,7 +139,7 @@ class Nonterminal:
                         depth -= 1
                 raw2 = raw[j + 1:end]
                 absableitung.append(Recgroup())
-                absableitung.append(self.absbuilder(raw2))
+                absableitung.append(self.parse2(raw2))
                 j = end
             elif raw[j] == "[":
                 depth = 0
@@ -157,10 +152,10 @@ class Nonterminal:
                     elif raw[k] == ']':
                         depth -= 1
                 raw2 = raw[j + 1:end]
-                absableitung.append(Optgroup())
-                absableitung.append(self.absbuilder(raw2))
+                absableitung.append(Orgroup())
+                absableitung.append([Terminal(""), self.parse2(raw2)])
                 j = end
-            elif isinstance(raw[j], str):
+            elif isinstance(raw[j], Terminal):
                 absableitung.append(raw[j])
 
             j += 1
@@ -171,7 +166,7 @@ class Nonterminal:
         ableitung2 = []
 
         for e in range(len(ableitung)):
-            if isinstance(ableitung[e], Recgroup) or isinstance(ableitung[e], Optgroup):
+            if isinstance(ableitung[e], Recgroup):
                 ableitung[e + 1] = self.OrGroupFinder(ableitung[e + 1])
             elif isinstance(ableitung[e], list):
                 ableitung[e] = self.OrGroupFinder(ableitung[e])
@@ -180,7 +175,7 @@ class Nonterminal:
         status = 0
         f = 0
         while f < len(ableitung):
-            if (isinstance(ableitung[f], Recgroup) or isinstance(ableitung[f], Optgroup)) or isinstance(ableitung[f], Orgroup):
+            if isinstance(ableitung[f], Recgroup) or isinstance(ableitung[f], Orgroup):
                 if status == 0 and f + 2 == len(ableitung):
                     ableitung2.extend(ableitung[f:f + 1])
                 elif status == 1 and f + 2 == len(ableitung):
@@ -244,7 +239,7 @@ class Ebnfpruefer:
         self.grammatikbuilder(self.grammartextarray)
 
         for nt in self.nichtterminalarray:
-            terminale = nt.Updatetoabs(self.nichtterminalarray)
+            terminale = nt.parse1(self.nichtterminalarray)
             for t in terminale:
                 if t not in self.terminalalphabet:
                     self.terminalalphabet.append(t)
@@ -613,17 +608,11 @@ class Ebnfpruefer:
 
         def reboy(section, origin=[], path=[0]):
             if isinstance(section, list):
-                p_origin = origin[:]
-                p_origin.append(None)
-                for i in range(len(section)):
-                    p_path = path[:]
-                    p_path.append(i)
-                    reboy(section[i], p_origin, p_path)
-            elif isinstance(section, Nonterminal):
                 personal_origin = origin[:]
-                personal_origin.append(section)
-                self.uglyoverwrite(path, section.absableitung, self.tree)
-                for i in range(len(self.uglypull(path, self.tree))):
+                personal_origin.append(None)
+                i = 0
+                end = len(section)
+                while i < end:
                     personal_path = path[:]
                     personal_path.append(i)
                     if self.uglypull(personal_path, self.tree) in origin:
@@ -632,10 +621,29 @@ class Ebnfpruefer:
                             if self.uglypull(personal_path, self.tree) == origin[j]:
                                 pointer = j
                                 break
-                        self.uglyoverwrite(personal_path, Recurse(personal_path[0:pointer+1]), self.tree)
+                        self.uglyoverwrite(personal_path, Recurse(personal_path[0:pointer + 1]), self.tree)
                     else:
                         reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
-
+                    i += 1
+            elif isinstance(section, Nonterminal):
+                personal_origin = origin[:]
+                personal_origin.append(section)
+                self.uglyoverwrite(path, section.absableitung, self.tree)
+                i = 0
+                end = len(self.uglypull(path, self.tree))
+                while i < end:
+                    personal_path = path[:]
+                    personal_path.append(i)
+                    if self.uglypull(personal_path, self.tree) in origin:
+                        pointer = None
+                        for j in range(len(origin)):
+                            if self.uglypull(personal_path, self.tree) == origin[j]:
+                                pointer = j
+                                break
+                        self.uglyoverwrite(personal_path, Recurse(personal_path[0:pointer + 1]), self.tree)
+                    else:
+                        reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
+                    i += 1
         reboy(self.tree[0])
 
     def literalcheck(self):
@@ -657,9 +665,6 @@ class Ebnfpruefer:
                 if j == len(self.word) - 1 and not self.passed:
                     return False
         alternate_reality(coverage)
-
-
-
 
 
 grammarcheck1 = Ebnfpruefer()
