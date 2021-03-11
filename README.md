@@ -39,10 +39,10 @@ The program loop allows you to check multiple Words. To Use a different Grammar,
 ## Example for an input (EBNF)
 
 
-`example = word, number, character, ["."];`
-`word = ("Hello", word) | "Hello";`
-`number = "1", {"1"};`
-`character = "!" | "," | "?";`
+`example = word, number, character, ["."];`\n
+`word = ("Hello", word) | "Hello";`\n
+`number = "1", {"1"};`\n
+`character = "!" | "," | "?";`\n
 
 
 
