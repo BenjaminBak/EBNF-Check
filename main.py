@@ -585,14 +585,19 @@ class Ebnfpruefer:
 
             self.nichtterminalarray.append(Nonterminal(ntname, Abltext))
 
-    def uglyoverwrite(self, indexlist, obj, array):
+    def uglyoverwrite(self, indexlist, obj, array, poping=False):
         if not indexlist:
             array = obj
         else:
             indexstr = ''
-            for i in indexlist:
-                indexstr += '[' + str(i) + ']'
-            exec('array' + indexstr + ' = obj')
+            if poping:
+                for i in range(len(indexlist)-1):
+                    indexstr += '[' + str(indexlist[i]) + ']'
+                exec('array' + indexstr + '.pop(indexlist[-1])')
+            else:
+                for i in indexlist:
+                    indexstr += '[' + str(i) + ']'
+                exec('array' + indexstr + ' = obj')
 
     def uglypull(self, indexlist, array):
         if not indexlist:
@@ -622,6 +627,16 @@ class Ebnfpruefer:
                                 pointer = j
                                 break
                         self.uglyoverwrite(personal_path, Recurse(personal_path[0:pointer + 1]), self.tree)
+                    elif isinstance(self.uglypull(personal_path, self.tree), Recgroup):
+                        hold_path = personal_path[:]
+                        hold_path[-1] += 1
+                        personal_origin.append(None)
+                        self.uglyoverwrite(personal_path, [Orgroup, [Terminal(""), self.uglypull(hold_path, self.tree), Recurse(personal_path)]], self.tree)
+                        personal_path.append(1)
+                        personal_path.append(1)
+                        reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
+                        self.uglyoverwrite(hold_path, None, self.tree, True)
+                        end -= 1
                     else:
                         reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
                     i += 1
@@ -641,6 +656,16 @@ class Ebnfpruefer:
                                 pointer = j
                                 break
                         self.uglyoverwrite(personal_path, Recurse(personal_path[0:pointer + 1]), self.tree)
+                    elif isinstance(self.uglypull(personal_path, self.tree), Recgroup):
+                        hold_path = personal_path[:]
+                        hold_path[-1] += 1
+                        personal_origin.append(None)
+                        self.uglyoverwrite(personal_path, [Orgroup, [Terminal(""), self.uglypull(hold_path, self.tree), Recurse(personal_path)]], self.tree)
+                        personal_path.append(1)
+                        personal_path.append(1)
+                        reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
+                        self.uglyoverwrite(hold_path, None, self.tree, True)
+                        end -= 1
                     else:
                         reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
                     i += 1
