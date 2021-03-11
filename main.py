@@ -38,8 +38,16 @@ class Recurse:
     def __repr__(self):
         return self.representation
 
+class Terminal:
+    def __init__(self, index):
+        self.content
 
-class Nichtterminal:
+    def __repr__(self):
+        return '#T:'+self.content
+
+
+
+class Nonterminal:
     def __init__(self, name, ableitung):
         self.name = name
         self.ableitungtxt = ableitung
@@ -107,7 +115,7 @@ class Nichtterminal:
         absableitung = []
         j = 0
         while j < len(raw):
-            if isinstance(raw[j], Nichtterminal):
+            if isinstance(raw[j], Nonterminal):
                 absableitung.append(raw[j])
             elif raw[j] == '|':
                 absableitung.append('|')
@@ -177,7 +185,7 @@ class Nichtterminal:
                     ableitung2.extend(ableitung[f:f + 1])
                 elif status == 1 and f + 2 == len(ableitung):
                     templist.extend(ableitung[f:f + 1])
-                    ableitung2.append(Optgroup)
+                    ableitung2.append(Orgroup)
                     ableitung2.extend(templist)
                     templist = []
                     status = 0
@@ -185,7 +193,7 @@ class Nichtterminal:
                     ableitung2.extend(ableitung[f:f+1])
                 elif status == 1 and ableitung[f + 2] != "|":
                     templist.extend(ableitung[f:f+1])
-                    ableitung2.append(Optgroup)
+                    ableitung2.append(Orgroup)
                     ableitung2.extend(templist)
                     templist = []
                     status = 0
@@ -200,7 +208,7 @@ class Nichtterminal:
                     ableitung2.append(ableitung[f])
                 elif status == 1 and f + 1 == len(ableitung):
                     templist.append(ableitung[f])
-                    ableitung2.append(Optgroup)
+                    ableitung2.append(Orgroup)
                     ableitung2.append(templist)
                     templist = []
                     status = 0
@@ -208,7 +216,7 @@ class Nichtterminal:
                     ableitung2.append(ableitung[f])
                 elif status == 1 and ableitung[f + 1] != "|":
                     templist.append(ableitung[f])
-                    ableitung2.append(Optgroup)
+                    ableitung2.append(Orgroup)
                     ableitung2.append(templist)
                     templist = []
                     status = 0
@@ -243,14 +251,21 @@ class Ebnfpruefer:
         self.ugly = None
         self.tree = []
         self.branchconnect()
-
         self.word = None
         while True:
             print('\nGeben Sie nun das Wort an, dessen Konformität geprüft werden soll.\n')
             self.word = input('Zu prüfendes Wort:  ')
             print('\n')
- 
+            self.passed = False
+            self.literalcheck()
+            affiliation = None
+            if self.passed:
+                affiliation = True
 
+            if affiliation:
+                print(' ✔ Das angegebene Wort ist der Grammatik zugehörig.')
+            else:
+                print(' ✖ Das angegebene Wort ist der Grammatik nicht zugehörig.')
             print('\nWollen Sie mit der aktuellen Grammatik weitere Wörter prüfen? \n')
             exit_choice = input('(drücke y/n):  ')
             if exit_choice != 'y':
@@ -573,7 +588,7 @@ class Ebnfpruefer:
                     break
             Abltext = line[pointerleft:pointerright]
 
-            self.nichtterminalarray.append(Nichtterminal(ntname, Abltext))
+            self.nichtterminalarray.append(Nonterminal(ntname, Abltext))
 
     def uglyoverwrite(self, indexlist, obj, array):
         if not indexlist:
@@ -598,8 +613,13 @@ class Ebnfpruefer:
 
         def reboy(section, origin=[], path=[0]):
             if isinstance(section, list):
-                pass
-            elif isinstance(section, Nichtterminal):
+                p_origin = origin[:]
+                p_origin.append(None)
+                for i in range(len(section)):
+                    p_path = path[:]
+                    p_path.append(i)
+                    reboy(section[i], p_origin, p_path)
+            elif isinstance(section, Nonterminal):
                 personal_origin = origin[:]
                 personal_origin.append(section)
                 self.uglyoverwrite(path, section.absableitung, self.tree)
@@ -612,11 +632,31 @@ class Ebnfpruefer:
                             if self.uglypull(personal_path, self.tree) == origin[j]:
                                 pointer = j
                                 break
-                        self.uglyoverwrite(personal_path, Recurse(personal_path[0:j+1]), self.tree)
+                        self.uglyoverwrite(personal_path, Recurse(personal_path[0:pointer+1]), self.tree)
                     else:
                         reboy(self.uglypull(personal_path, self.tree), personal_origin, personal_path)
 
         reboy(self.tree[0])
+
+    def literalcheck(self):
+        coverage = []
+        for i in range(len(self.word)):
+            coverage.append(False)
+        def alternate_reality(versionofcoverage, index=0):
+            new_versionofcoverage = versionofcoverage[:]
+            for j in range(index, len(self.word)):
+                for k in range(j+1, len(self.word)+1):
+                    if self.word[j:k] in self.terminalalphabet:
+                        for l in range(j, k):
+                            new_versionofcoverage[l] = True
+                        if False in new_versionofcoverage:
+                            alternate_reality(new_versionofcoverage, k)
+                        else:
+                            self.passed = True
+                            return True
+                if j == len(self.word) - 1 and not self.passed:
+                    return False
+        alternate_reality(coverage)
 
 
 
