@@ -1,8 +1,11 @@
 # EBNF-Check
 
 Our project "EBNF-Check" functions as a parser for a formal grammar.
-It is able to examine whether a word can be derived from a given grammar written in the EBNF or not.
-It also checks your grammar input for potential syntax errors.
+It checks your grammar input for potential syntax errors and gives you a useful response.
+To a certain degree it is able to examine whether a word can be derived from a given grammar written in the EBNF or not. 
+This function was the original purpose of this project, but due to some feedback we received it became clear that our approach wasn't as straight forward as we thought.
+Hence our program has only this limited fuctionality.
+
 
 ## Installing / Getting started
 
@@ -19,11 +22,12 @@ The program loop allows you to check multiple Words. To Use a different Grammar,
 ## Features
 
 * check the formal grammar for errors
-* examine a word
+* examine the derivability of a word to some extend
 
 
 ## Planned Features:
 
+* examine the derivability of a word completely
 * you can choose between using the EBNF or the standard BNF and the program will work with both
 * ability to use quotations marks as a content
 
